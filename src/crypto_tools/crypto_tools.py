@@ -189,7 +189,11 @@ def decrypt(data=None, key=None):
     except cryptography.fernet.InvalidToken:
         raise RuntimeError("Invalid encryption key")
 
-    return unencrypted_data.decode(ENCODE_METHOD)
+    try:
+        # Try to decode the data (eg just a string)
+        return unencrypted_data.decode(ENCODE_METHOD)
+    except UnicodeDecodeError:
+        return unencrypted_data
 
 
 #
