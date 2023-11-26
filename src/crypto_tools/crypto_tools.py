@@ -87,11 +87,13 @@ class EncryptedFile():
         with open(self.filename, "rb") as file:
             contents = file.read()
         
-        if not len(contents) > SALT_SIZE:
+        if not (len(contents) > SALT_SIZE):
             return None
 
         salt = contents[:SALT_SIZE]
         data = contents[SALT_SIZE:]
+
+        print(f"Salt from File on Read: >{salt}<")
 
         # Generate a key, then decrypt the data
         key = derive_key(password=self.password, salt=salt)        
@@ -114,15 +116,14 @@ class EncryptedFile():
         if not self.filename:
             raise ValueError("'filename' attribute must be set")
 
-        if not len(contents) > SALT_SIZE:
-            return None
-
         # Get a key to use for encryption
         salt = generate_salt(size=SALT_SIZE)
+        print(f"Salt: >{salt}<")
         key = derive_key(password=self.password, salt=salt)        
 
         # Encrypt the data
         contents = salt + encrypt(data=data, key=key)
+        print(f"Salt from File on Write: >{contents[:SALT_SIZE]}<")
 
         with open(self.filename, "wb") as file:
             file.write(contents)
@@ -181,11 +182,14 @@ def decrypt(data=None, key=None):
         data = str(data).encode(ENCODE_METHOD)
 
     # Decrypt the data
+    unencrypted_data = b""
     fernet = Fernet(key)
     try:
-        return fernet.decrypt(data)
+        unencrypted_data = fernet.decrypt(data)
     except cryptography.fernet.InvalidToken:
         raise RuntimeError("Invalid encryption key")
+
+    return unencrypted_data.decode(ENCODE_METHOD)
 
 
 #
@@ -228,7 +232,7 @@ def derive_key(password="", salt=None):
 
     # Derive the key from the password/salt
     kdf = Scrypt(salt=salt, length=SCRYPT_LENGTH, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
-    return kdf.derive(password)
+    return base64.urlsafe_b64encode(kdf.derive(password))
 
 
 ###########################################################################
