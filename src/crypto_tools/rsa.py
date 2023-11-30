@@ -94,8 +94,8 @@ def decrypt(data=b"", private_key=None):
                 label=None
             )
         )
-    except RuntimeWarning:
-        raise RuntimeWarning("Invalid decryption key")
+    except ValueError:
+        raise RuntimeWarning("Decryption Failed")
 
     try:
         # Try to decode the data (eg just a string)

@@ -47,18 +47,24 @@ def test_sign_string():
     assert signature is not None
 
     # Verify with correct key
-    crypto_tools.rsa.verify(data=simple_string, public_key=priv_key.public_key())
+    crypto_tools.rsa.verify(data=simple_string, signature=signature, public_key=priv_key.public_key())
 
     # Verify with incorrect string
     with pytest.raises(RuntimeWarning):
-        crypto_tools.rsa.verify(data=wrong_string, public_key=priv_key.public_key())
+        crypto_tools.rsa.verify(data=wrong_string, signature=signature, public_key=priv_key.public_key())
 
     with pytest.raises(RuntimeWarning):
-        crypto_tools.rsa.verify(data=empty_string, public_key=priv_key.public_key())
+        crypto_tools.rsa.verify(data=empty_string, signature=signature, public_key=priv_key.public_key())
 
     # Verify with incorrect key
     with pytest.raises(RuntimeWarning):
-        crypto_tools.rsa.verify(data=simple_string, public_key=wrong_key.public_key())
+        crypto_tools.rsa.verify(data=simple_string, signature=signature, public_key=wrong_key.public_key())
+
+    # Verify with incorrect signature
+    with pytest.raises(RuntimeWarning):
+        crypto_tools.rsa.verify(data=simple_string, signature=b"wrong_sig".hex(), public_key=priv_key.public_key())
+
+
 
 
 def test_encrypt_string():
@@ -72,7 +78,8 @@ def test_encrypt_string():
     assert str(decrypted_string) == str(simple_string)
 
     # Decrypt the wrong string with the right key
-    with pytest.raises(RuntimeWarning):
+    # Will raise value error as sencrypted string isn't the correct length
+    with pytest.raises(ValueError):
         decrypted_string = crypto_tools.rsa.decrypt(data=wrong_string, private_key=priv_key)
 
     # Decrypt the right string with the wrong key
