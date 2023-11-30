@@ -76,12 +76,12 @@ class EncryptedFileBase():
         with open(self.filename, "rb") as file:
             contents = file.read()
         
-        if not (len(contents) > self.header_size):
+        if not (len(contents) > self._header_size):
             return None
 
-        if self.header_size > 0:
-            self._header = contents[:self.header_size]
-            self._data = contents[self.header_size:]
+        if self._header_size > 0:
+            self._header = contents[:self._header_size]
+            self._data = contents[self._header_size:]
         else:
             self._data = contents
 
