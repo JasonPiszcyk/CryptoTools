@@ -35,23 +35,18 @@ from crypto_tools.constants import *
 ###########################################################################
 class EncryptedFile_Fernet(EncryptedFileBase):
     ''' Encrypt file using Fernet '''
-    # Attributes
-
-    # Private Attributes
-    __salt = None
-    __key = None
-    __password = ""
-
+    #
     # Properties
+    #
     @property
     def salt(self):
-        return self.__salt
+        return self._salt
     
     @salt.setter
     def salt(self, value):
         # Generate a key using the salt
-        self.__salt = value
-        self.__key = self._derive_key()   
+        self._salt = value
+        self._key = self._derive_key()   
 
 
     @property
@@ -62,8 +57,8 @@ class EncryptedFile_Fernet(EncryptedFileBase):
     @password.setter
     def password(self, value):
         # Generate a key using the password
-        self.__password = value
-        self.__key = self._derive_key()   
+        self._password = value
+        self._key = self._derive_key()   
 
 
     #
@@ -73,9 +68,9 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         ''' Init method for class '''
         super().__init__(*args, **kwargs)
 
-        self.__password = password
-        self.__salt = salt
-        self.__key = self._derive_key()
+        self._password = password
+        self._salt = salt
+        self._key = self._derive_key()
 
 
     #
@@ -94,7 +89,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         if not self.filename:
             raise ValueError("'filename' attribute must be set")
         
-        self.base_read()
+        self._read()
 
         # Decrypt the data
         return self.decrypt()
@@ -117,9 +112,9 @@ class EncryptedFile_Fernet(EncryptedFileBase):
             raise ValueError("'filename' attribute must be set")
 
         # Encrypt the data
-        self.__header = self.salt
-        self.__data = self.encrypt(data)
-        self.base_write()
+        self._header = self._salt
+        self._data = self.encrypt(data)
+        self._write()
 
 
     #
@@ -139,15 +134,15 @@ class EncryptedFile_Fernet(EncryptedFileBase):
             raise RuntimeError("Encryption key empty")
 
         # Check type of data
-        if not isinstance(self.__data, bytes):
+        if not isinstance(self._data, bytes):
             # Assume everything else is a string...
-            self.__data = str(self.__data).encode(ENCODE_METHOD)
+            self._data = str(self._data).encode(ENCODE_METHOD)
 
         # Decrypt the data
         unencrypted_data = b""
-        fernet = Fernet(self.__key)
+        fernet = Fernet(self._key)
         try:
-            unencrypted_data = fernet.decrypt(self.__data)
+            unencrypted_data = fernet.decrypt(self._data)
         except InvalidToken:
             raise RuntimeError("Invalid encryption key")
 
@@ -171,7 +166,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         Return Value:
             bytes: The encypted form of the data
         '''
-        if not self.__key:
+        if not self._key:
             raise ValueError("'key' argument must be supplied")
 
         # Check type of data
@@ -180,7 +175,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
             data = str(data).encode(ENCODE_METHOD)
 
         # Encrypt the data
-        fernet = Fernet(self.__key)
+        fernet = Fernet(self._key)
         return fernet.encrypt(data)
 
 
@@ -197,18 +192,18 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         Return Value:
             bytes: The key
         '''
-        if not self.salt:
+        if not self._salt:
             # Generate a salt
-            self.salt = secrets.token_bytes(SALT_SIZE)
+            self._salt = secrets.token_bytes(SALT_SIZE)
 
         # Check type of the password
-        if not isinstance(self.__password, bytes):
+        if not isinstance(self._password, bytes):
             # Assume everything else is a string...
-            self.__password = str(self.__password).encode(ENCODE_METHOD)
+            self._password = str(self._password).encode(ENCODE_METHOD)
 
         # Derive the key from the password/salt
-        kdf = Scrypt(salt=self.salt, length=SCRYPT_LENGTH, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
-        return base64.urlsafe_b64encode(kdf.derive(self.__password))
+        kdf = Scrypt(salt=self._salt, length=SCRYPT_LENGTH, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
+        return base64.urlsafe_b64encode(kdf.derive(self._password))
 
 
 ###########################################################################

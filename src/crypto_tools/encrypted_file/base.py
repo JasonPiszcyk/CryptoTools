@@ -28,17 +28,6 @@ import os.path
 ###########################################################################
 class EncryptedFileBase():
     ''' Base class for encrypted files '''
-    # Attributes
-    filename = ""
-    key = ""
-    header_size = 0
-
-    # Private Attributes
-    __header = b""
-    __data = b""
-    __file_read = False
-
-
     #
     # __init__
     #
@@ -50,9 +39,9 @@ class EncryptedFileBase():
         self.key = key
         self.header_size = header_size
 
-        self.__header = b""
-        self.__data = b""
-        self.__file_read = False
+        self._header = b""
+        self._data = b""
+        self._file_read = False
 
 
     ###########################################################################
@@ -61,9 +50,9 @@ class EncryptedFileBase():
     #
     ###########################################################################
     #
-    # base_read
+    # _read
     #
-    def base_read(self):
+    def _read(self):
         '''
         Read an encrypted file into the class
 
@@ -74,7 +63,7 @@ class EncryptedFileBase():
             None
         '''
         # Have we already read in the contents?
-        if self.__file_read:
+        if self.file_read:
             return
 
         if not self.filename:
@@ -91,18 +80,18 @@ class EncryptedFileBase():
             return None
 
         if self.header_size > 0:
-            self.__header = contents[:self.header_size]
-            self.__data = contents[self.header_size:]
+            self._header = contents[:self.header_size]
+            self._data = contents[self.header_size:]
         else:
-            self.__data = contents
+            self._data = contents
 
-        self.__file_read = True
+        self._file_read = True
 
 
     #
-    # base_write
+    # _write
     #
-    def base_write(self):
+    def _write(self):
         '''
         Write an encrypted file
 
@@ -116,7 +105,7 @@ class EncryptedFileBase():
             raise ValueError("'filename' attribute must be set")
 
         # Encrypt the data
-        contents = self.__header + self.__data
+        contents = self._header + self._data
 
         with open(self.filename, "wb") as file:
             file.write(contents)
