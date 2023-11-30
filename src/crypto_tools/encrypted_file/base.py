@@ -63,7 +63,7 @@ class EncryptedFileBase():
             None
         '''
         # Have we already read in the contents?
-        if self.file_read:
+        if self._file_read:
             return
 
         if not self.filename:
