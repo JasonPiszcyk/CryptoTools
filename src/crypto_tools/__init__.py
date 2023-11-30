@@ -10,10 +10,10 @@
 *
 '''
 
-__all__ = [ 
-    "crypto_tools",
+__all__ = [
     "fernet",
+    "EncryptedFile"
 ]
 
-from .crypto_tools import EncryptedFile
-from . import fernet
+from crypto_tools.tools import EncryptedFile
+from crypto_tools import fernet
