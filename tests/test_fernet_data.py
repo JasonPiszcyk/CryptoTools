@@ -44,7 +44,7 @@ def test_string():
 
     # Decrypt the right string with the right key
     decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=key)
-    assert encrypted_string is not None
+    assert decrypted_string is not None
     assert str(decrypted_string) == str(simple_string)
 
     # Decrypt the wrong string with the right key

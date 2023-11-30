@@ -27,66 +27,59 @@ import crypto_tools
 # Start the tests...
 #
 ###########################################################################
-priv_key = crypto_tools.rsa.generate_key()
-wrong_key = crypto_tools.fernet.generate_key()
+priv_key = crypto_tools.rsa.generate_keys()
+wrong_key = crypto_tools.rsa.generate_keys()
+
+simple_string = "This is a simple string"
+wrong_string = "This is not the string you are looking for"
+empty_string=b""
+
 
 #
-# Test encrypting/decrypting a simple string
+# Test signing/verifying a simple string
 #
-def test_string():
-    assert key is not None
+def test_sign_string():
+    assert priv_key is not None
+    assert wrong_key is not None
 
-    # Encrypt a simple string
-    simple_string = "This is a string"
-    encrypted_string = crypto_tools.fernet.encrypt(data=simple_string, key=key)
+    # Sign a string
+    signature = crypto_tools.rsa.sign(data=simple_string, private_key=priv_key)
+    assert signature is not None
+
+    # Verify with correct key
+    crypto_tools.rsa.verify(data=simple_string, public_key=priv_key.public_key)
+
+    # Verify with incorrect string
+    with pytest.raises(RuntimeWarning):
+        crypto_tools.rsa.verify(data=wrong_string, public_key=priv_key.public_key)
+
+    with pytest.raises(RuntimeWarning):
+        crypto_tools.rsa.verify(data=empty_string, public_key=priv_key.public_key)
+
+    # Verify with incorrect key
+    with pytest.raises(RuntimeWarning):
+        crypto_tools.rsa.verify(data=simple_string, public_key=wrong_key.public_key)
+
+
+def test_encrypt_string():
+    encrypted_string = crypto_tools.rsa.encrypt(data=simple_string, public_key=priv_key.public_key)
     assert encrypted_string is not None
     assert str(encrypted_string) != str(simple_string)
 
     # Decrypt the right string with the right key
-    decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=key)
-    assert encrypted_string is not None
+    decrypted_string = crypto_tools.rsa.decrypt(data=encrypted_string, private_key=priv_key)
+    assert decrypted_string is not None
     assert str(decrypted_string) == str(simple_string)
 
     # Decrypt the wrong string with the right key
     with pytest.raises(RuntimeWarning):
-        decrypted_string = crypto_tools.fernet.decrypt(data="random string", key=key)
+        decrypted_string = crypto_tools.rsa.decrypt(data=wrong_string, private_key=priv_key)
 
     # Decrypt the right string with the wrong key
     with pytest.raises(RuntimeWarning):
-        decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=wrong_key)
+        decrypted_string = crypto_tools.rsa.decrypt(data=encrypted_string, private_key=wrong_key)
 
     # Decrypt the wrong string with the wrong key
     with pytest.raises(RuntimeWarning):
-        decrypted_string = crypto_tools.fernet.decrypt(data="random string", key=wrong_key)
-
-
-#
-# Test encrypting/decrypting a simple string
-#
-def test_list():
-    assert key is not None
-
-    # Encrypt 
-    simple_list = [ "a", "b", "c", "d" ]
-    list_json = json.dumps(simple_list)
-    encrypted_string = crypto_tools.fernet.encrypt(data=list_json, key=key)
-    assert encrypted_string is not None
-
-    # Decrypt
-    decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=key)
-    assert encrypted_string is not None
-    assert json.loads(decrypted_string) == simple_list
-
-    # Decrypt - wrong data
-    with pytest.raises(RuntimeWarning):
-        decrypted_string = crypto_tools.fernet.decrypt(data=json.dumps(["1", "2"]), key=key)
-
-    # Decrypt - wrong key
-    with pytest.raises(RuntimeWarning):
-        decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=wrong_key)
-
-    # Decrypt - wrong data, wrong key
-    with pytest.raises(RuntimeWarning):
-        decrypted_string = crypto_tools.fernet.decrypt(data=json.dumps(["1", "2"]), key=wrong_key)
-
+        decrypted_string = crypto_tools.rsa.decrypt(data=wrong_string, private_key=wrong_key)
 

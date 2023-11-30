@@ -145,7 +145,7 @@ def sign(data=b"", private_key=None):
 #
 # verify
 #
-def verify(self, data=b"", signature=None, public_key=None):
+def verify(data=b"", signature=None, public_key=None):
     '''
     Verify data using the specified signature and public key
 
