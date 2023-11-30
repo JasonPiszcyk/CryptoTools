@@ -227,11 +227,17 @@ def serialise_private_key(private_key=None):
         return ""
 
     # Serialise the key
-    return private_key.private_bytes(
+    serial_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()
     )
+
+    try:
+        # Try to decode the data (eg just a string)
+        return serial_key.decode()
+    except UnicodeDecodeError:
+        return serial_key
 
 
 #
@@ -251,10 +257,16 @@ def serialise_public_key(public_key=None):
         return ""
 
     # Serialise the key
-    return public_key.public_bytes(
+    serial_key = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
+
+    try:
+        # Try to decode the data (eg just a string)
+        return serial_key.decode()
+    except UnicodeDecodeError:
+        return serial_key
 
 
 #
