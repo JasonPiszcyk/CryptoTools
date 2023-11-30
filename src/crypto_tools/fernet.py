@@ -14,11 +14,12 @@
 
 # Our Module Imports
 from cryptography.fernet import Fernet 
-
+from crypto_tools.constants import *
 
 #
 # Globals
 #
+
 
 
 ###########################################################################
@@ -44,6 +45,12 @@ def encrypt(data=b"", key=None):
         raise ValueError("Encryption key must be supplied")
     
     fernet = Fernet(key)
+
+    # Check type of data
+    if not isinstance(data, bytes):
+        # Assume everything else is a string...
+        data = str(data).encode(ENCODE_METHOD)
+
     return fernet.encrypt(data)
 
 

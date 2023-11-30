@@ -21,17 +21,11 @@ import base64
 
 # Our Module Imports
 from crypto_tools.encrypted_file.base import EncryptedFileBase
+from crypto_tools.constants import *
 
 #
 # Globals
 #
-ENCODE_METHOD = "utf-8"
-SALT_SIZE = 16
-
-SCRYPT_LENGTH = 32
-SCRYPT_N = 2**20
-SCRYPT_R = 8
-SCRYPT_P = 1
 
 
 ###########################################################################
