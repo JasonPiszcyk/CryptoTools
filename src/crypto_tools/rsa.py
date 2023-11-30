@@ -257,6 +257,46 @@ def serialise_public_key(public_key=None):
     )
 
 
+#
+# deserialise_private_key
+#
+def deserialise_private_key(key_pem=None):
+    '''
+    Deserialise a Private Key (eg PEM format back into RSAPrivateKey class)
+
+    Parameters:
+        key_pem: The key in PEM format
+
+    Return Value:
+        object: The RSA private key
+    '''
+    if key_pem is None:
+        return ""
+
+    # Deserialise the key
+    return serialization.load_pem_private_key(data=key_pem, password=None)
+
+
+#
+# deserialise_public_key
+#
+def deserialise_public_key(key_pem=None):
+    '''
+    Deserialise a Public Key (eg PEM format back into RSA class)
+
+    Parameters:
+        key_pem: The key in PEM format
+
+    Return Value:
+        object: The RSA key
+    '''
+    if key_pem is None:
+        return ""
+
+    # Deserialise the key
+    return serialization.load_pem_public_key(data=key_pem)
+
+
 ###########################################################################
 #
 # In case this is run directly rather than imported...
