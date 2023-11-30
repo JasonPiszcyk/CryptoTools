@@ -94,7 +94,7 @@ def decrypt(data=b"", private_key=None):
                 label=None
             )
         )
-    except NotImplemented:
+    except RuntimeWarning:
         raise RuntimeWarning("Invalid decryption key")
 
     try:

@@ -47,22 +47,22 @@ def test_sign_string():
     assert signature is not None
 
     # Verify with correct key
-    crypto_tools.rsa.verify(data=simple_string, public_key=priv_key.public_key)
+    crypto_tools.rsa.verify(data=simple_string, public_key=priv_key.public_key())
 
     # Verify with incorrect string
     with pytest.raises(RuntimeWarning):
-        crypto_tools.rsa.verify(data=wrong_string, public_key=priv_key.public_key)
+        crypto_tools.rsa.verify(data=wrong_string, public_key=priv_key.public_key())
 
     with pytest.raises(RuntimeWarning):
-        crypto_tools.rsa.verify(data=empty_string, public_key=priv_key.public_key)
+        crypto_tools.rsa.verify(data=empty_string, public_key=priv_key.public_key())
 
     # Verify with incorrect key
     with pytest.raises(RuntimeWarning):
-        crypto_tools.rsa.verify(data=simple_string, public_key=wrong_key.public_key)
+        crypto_tools.rsa.verify(data=simple_string, public_key=wrong_key.public_key())
 
 
 def test_encrypt_string():
-    encrypted_string = crypto_tools.rsa.encrypt(data=simple_string, public_key=priv_key.public_key)
+    encrypted_string = crypto_tools.rsa.encrypt(data=simple_string, public_key=priv_key.public_key())
     assert encrypted_string is not None
     assert str(encrypted_string) != str(simple_string)
 
