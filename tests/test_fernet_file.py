@@ -60,7 +60,7 @@ def test_file():
     file.write(data=FILE_CONTENTS)
 
     # Read the file
-    with open("/tmp/jpp.enc", "rt") as f:
+    with open("/tmp/jpp.enc", "rb") as f:
         new_contents = f.read()
 
     assert str(FILE_CONTENTS) != str(new_contents)
