@@ -13,7 +13,7 @@
 # System Imports
 
 # Our Module Imports
-from encrypted_file.fernet import EncryptedFile_Fernet
+from crypto_tools.encrypted_file.fernet import EncryptedFile_Fernet
 
 
 #

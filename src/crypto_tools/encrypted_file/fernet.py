@@ -18,11 +18,9 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 import secrets
 import base64
 
-import os.path
-
 
 # Our Module Imports
-from encrypted_file.base import EncryptedFileBase
+from crypto_tools.encrypted_file.base import EncryptedFileBase
 
 #
 # Globals

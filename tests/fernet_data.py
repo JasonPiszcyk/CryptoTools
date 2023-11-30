@@ -37,8 +37,8 @@ key = crypto_tools.fernet.generate_key()
 
 # Data Encryption
 x = "This is a string"
-ex = fernet.encrypt(data=x, key=key)
-dex = fernet.decrypt(data=ex, key=key)
+ex = crypto_tools.fernet.encrypt(data=x, key=key)
+dex = crypto_tools.fernet.decrypt(data=ex, key=key)
 print(f"Unencrypted: >{x}<")
 print(f"Encrypted: >{ex}<")
 print(f"Decrypted: >{dex}<")
