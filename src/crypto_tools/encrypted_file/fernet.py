@@ -88,6 +88,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         if not self.filename:
             raise ValueError("'filename' attribute must be set")
         
+        self._header_size = SALT_SIZE
         self._read()
 
         # Decrypt the data

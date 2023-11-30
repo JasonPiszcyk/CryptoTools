@@ -31,14 +31,14 @@ class EncryptedFileBase():
     #
     # __init__
     #
-    def __init__(self, *args, filename="", key="", header_size=0, **kwargs):
+    def __init__(self, *args, filename="", key="", **kwargs):
         ''' Init method for class '''
         super().__init__(*args, **kwargs)
 
         self.filename = filename
         self.key = key
-        self.header_size = header_size
 
+        self._header_size = 0
         self._header = b""
         self._data = b""
         self._file_read = False
