@@ -12,7 +12,6 @@
 
 # System Imports
 import pytest
-from cryptography.fernet import InvalidToken
 import json
 
 # Our Module Imports
@@ -71,12 +70,12 @@ def test_file():
 
     # Wrong password
     wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=wrong_password)
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         wrong_pwd.read()
 
     # Wrong file
     wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/made_some_name_up.txt", password=password)
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         wrong_pwd.read()
 
 

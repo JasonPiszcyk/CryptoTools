@@ -11,7 +11,6 @@
 '''
 
 # System Imports
-import cryptography
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
@@ -144,7 +143,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         try:
             unencrypted_data = fernet.decrypt(self._data)
         except InvalidToken:
-            raise RuntimeError("Invalid encryption key")
+            raise RuntimeWarning("Invalid encryption key")
 
         try:
             # Try to decode the data (eg just a string)

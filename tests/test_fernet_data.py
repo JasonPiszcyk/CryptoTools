@@ -12,7 +12,6 @@
 
 # System Imports
 import pytest
-from cryptography.fernet import InvalidToken
 import json
 
 # Our Module Imports
@@ -48,15 +47,15 @@ def test_string():
     assert str(decrypted_string) == str(simple_string)
 
     # Decrypt the wrong string with the right key
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.fernet.decrypt(data="random string", key=key)
 
     # Decrypt the right string with the wrong key
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=wrong_key)
 
     # Decrypt the wrong string with the wrong key
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.fernet.decrypt(data="random string", key=wrong_key)
 
 
@@ -78,15 +77,15 @@ def test_list():
     assert json.loads(decrypted_string) == simple_list
 
     # Decrypt - wrong data
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.fernet.decrypt(data=json.dumps(["1", "2"]), key=key)
 
     # Decrypt - wrong key
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.fernet.decrypt(data=encrypted_string, key=wrong_key)
 
     # Decrypt - wrong data, wrong key
-    with pytest.raises(InvalidToken):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.fernet.decrypt(data=json.dumps(["1", "2"]), key=wrong_key)
 
 

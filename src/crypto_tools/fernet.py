@@ -13,7 +13,7 @@
 # System Imports
 
 # Our Module Imports
-from cryptography.fernet import Fernet 
+from cryptography.fernet import Fernet, InvalidToken
 from crypto_tools.constants import *
 
 #
@@ -72,7 +72,10 @@ def decrypt(data=b"", key=None):
         raise ValueError("Encryption key must be supplied")
     
     fernet = Fernet(key)
-    unencrypted_data = fernet.decrypt(data)
+    try:
+        unencrypted_data = fernet.decrypt(data)
+    except InvalidToken:
+        raise RuntimeWarning("Invalid encryption key")
 
     try:
         # Try to decode the data (eg just a string)
