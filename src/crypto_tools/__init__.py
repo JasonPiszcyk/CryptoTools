@@ -15,5 +15,5 @@ __all__ = [
     "EncryptedFile"
 ]
 
-from crypto_tools.tools import EncryptedFile
+from .tools import EncryptedFile
 from crypto_tools import fernet
