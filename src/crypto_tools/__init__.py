@@ -12,8 +12,10 @@
 
 __all__ = [
     "fernet",
+    "rsa",
     "EncryptedFile"
 ]
 
-from .tools import EncryptedFile
 from crypto_tools import fernet
+from crypto_tools import rsa
+from .tools import EncryptedFile

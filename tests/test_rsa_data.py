@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 '''
 *
-* test_fernet_data.py
+* test_rsa_data.py
 *
 * Copyright (c) 2023 Iocane Pty Ltd
 *
 * @author: Jason Piszcyk
 * 
-* Test for fernet on data objects
+* Test for RSA on data objects
 *
 '''
 
@@ -27,7 +27,7 @@ import crypto_tools
 # Start the tests...
 #
 ###########################################################################
-key = crypto_tools.fernet.generate_key()
+priv_key = crypto_tools.rsa.generate_key()
 wrong_key = crypto_tools.fernet.generate_key()
 
 #
