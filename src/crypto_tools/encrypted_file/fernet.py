@@ -130,7 +130,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         Return Value:
             bytes: The unencrypted form of the data
         '''
-        if not self.__key:
+        if not self._key:
             raise RuntimeError("Encryption key empty")
 
         # Check type of data
