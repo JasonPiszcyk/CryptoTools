@@ -61,9 +61,9 @@ class EncryptedFileBase():
     #
     ###########################################################################
     #
-    # __read
+    # base_read
     #
-    def __read(self):
+    def base_read(self):
         '''
         Read an encrypted file into the class
 
@@ -100,9 +100,9 @@ class EncryptedFileBase():
 
 
     #
-    # __write
+    # base_write
     #
-    def __write(self):
+    def base_write(self):
         '''
         Write an encrypted file
 

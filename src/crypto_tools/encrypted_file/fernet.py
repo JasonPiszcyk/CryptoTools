@@ -94,7 +94,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         if not self.filename:
             raise ValueError("'filename' attribute must be set")
         
-        self.__read()
+        self.base_read()
 
         # Decrypt the data
         return self.decrypt()
@@ -119,7 +119,7 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         # Encrypt the data
         self.__header = self.salt
         self.__data = self.encrypt(data)
-        self.__write()
+        self.base_write()
 
 
     #
