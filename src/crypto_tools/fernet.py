@@ -11,9 +11,9 @@
 '''
 
 # System Imports
+from cryptography.fernet import Fernet, InvalidToken
 
 # Our Module Imports
-from cryptography.fernet import Fernet, InvalidToken
 from crypto_tools.constants import *
 
 #
