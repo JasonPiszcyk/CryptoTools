@@ -78,8 +78,7 @@ def test_encrypt_string():
     assert str(decrypted_string) == str(simple_string)
 
     # Decrypt the wrong string with the right key
-    # Will raise value error as sencrypted string isn't the correct length
-    with pytest.raises(ValueError):
+    with pytest.raises(RuntimeWarning):
         decrypted_string = crypto_tools.rsa.decrypt(data=wrong_string, private_key=priv_key)
 
     # Decrypt the right string with the wrong key
