@@ -285,8 +285,14 @@ def deserialise_private_key(key_pem=None):
     if key_pem is None:
         return ""
 
+    # Check type of data
+    if not isinstance(key_pem, bytes):
+        # Assume everything else is a string...
+        key_pem = str(key_pem).encode(ENCODE_METHOD)
+
     # Deserialise the key
-    return serialization.load_pem_private_key(data=key_pem, password=None)
+    priv_key = serialization.load_pem_private_key(data=key_pem, password=None)
+    return priv_key
 
 
 #
@@ -305,8 +311,14 @@ def deserialise_public_key(key_pem=None):
     if key_pem is None:
         return ""
 
+    # Check type of data
+    if not isinstance(key_pem, bytes):
+        # Assume everything else is a string...
+        key_pem = str(key_pem).encode(ENCODE_METHOD)
+
     # Deserialise the key
-    return serialization.load_pem_public_key(data=key_pem)
+    pub_key = serialization.load_pem_public_key(data=key_pem)
+    return pub_key
 
 
 ###########################################################################
