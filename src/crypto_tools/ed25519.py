@@ -13,7 +13,7 @@
 # System Imports
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 from cryptography.exceptions import InvalidSignature
 
 
@@ -231,8 +231,33 @@ def deserialise_private_key(key_pem=None):
         key_pem = str(key_pem).encode(ENCODE_METHOD)
 
     # Deserialise the key
-    priv_key = ed25519.Ed25519PrivateKey.from_private_bytes(key_pem)
+    priv_key = load_pem_private_key(key_pem, password=None)
     return priv_key
+
+
+#
+# deserialise_public_key
+#
+def deserialise_public_key(key_pem=None):
+    '''
+    Deserialise a Public Key (eg PEM format back into Ed25519PublicKey class)
+
+    Parameters:
+        key_pem: The key in PEM format
+
+    Return Value:
+        object: The Ed25519 Public key
+    '''
+    if not key_pem: return None
+
+    # Check type of data
+    if not isinstance(key_pem, bytes):
+        # Assume everything else is a string...
+        key_pem = str(key_pem).encode(ENCODE_METHOD)
+
+    # Deserialise the key
+    pub_key = load_pem_public_key(key_pem)
+    return pub_key
 
 
 ###########################################################################
