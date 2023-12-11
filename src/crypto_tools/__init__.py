@@ -11,11 +11,13 @@
 '''
 
 __all__ = [
+    "ed25519",
     "fernet",
     "rsa",
     "EncryptedFile"
 ]
 
+from crypto_tools import ed25519
 from crypto_tools import fernet
 from crypto_tools import rsa
 from .tools import EncryptedFile
