@@ -124,22 +124,6 @@ def decrypt(data=b"", key=None):
         return unencrypted_data
 
 
-#
-# generate_key
-#
-def generate_key():
-    '''
-    Generate an encryption key
-
-    Parameters:
-        None
-
-    Return Value:
-        bytes: The encryption key
-    '''
-    return Fernet.generate_key()
-
-
 ###########################################################################
 #
 # In case this is run directly rather than imported...
