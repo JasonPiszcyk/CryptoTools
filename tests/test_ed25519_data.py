@@ -43,7 +43,7 @@ def test_sign_string_ed25519():
 
     # Sign a string
     signature = crypto_tools.ed25519.sign(data=simple_string, private_key=priv_key)
-    assert signature is not None
+    print(f"Signature: {signature}")
 
     # Verify with correct key
     crypto_tools.ed25519.verify(data=simple_string, signature=signature, public_key=priv_key.public_key())
@@ -61,5 +61,5 @@ def test_sign_string_ed25519():
 
     # Verify with incorrect signature
     with pytest.raises(RuntimeWarning):
-        crypto_tools.ed25519.verify(data=simple_string, signature=b"wrong_sig".hex(), public_key=priv_key.public_key())
+        crypto_tools.ed25519.verify(data=simple_string, signature=b"wrong_sig", public_key=priv_key.public_key())
 

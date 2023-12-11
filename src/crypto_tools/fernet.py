@@ -12,6 +12,7 @@
 
 # System Imports
 from cryptography.fernet import Fernet, InvalidToken
+import base64
 
 # Our Module Imports
 from crypto_tools.constants import *
@@ -24,7 +25,46 @@ from crypto_tools.constants import *
 
 ###########################################################################
 #
-# Our functions
+# Keys
+#
+###########################################################################
+#
+# generate_key
+#
+def generate_key():
+    '''
+    Generate an encryption key
+
+    Parameters:
+        None
+
+    Return Value:
+        object: The Fernet object
+    '''
+    return Fernet.generate_key()
+
+
+#
+# use_key
+#
+def use_key(key=None):
+    '''
+    Use a key derived elsewhere
+
+    Parameters:
+        key: A URL-safe base64-encoded 32-byte key
+
+    Return Value:
+        object: The Fernet object
+    '''
+    if not key: return None
+
+    return Fernet(key)
+
+
+###########################################################################
+#
+# Encryption / Decryption
 #
 ###########################################################################
 #
