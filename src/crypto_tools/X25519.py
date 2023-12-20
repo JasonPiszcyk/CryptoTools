@@ -13,11 +13,10 @@
 # System Imports
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import serialization
-import binascii
-import sys
-
+import base64
 
 # Our Module Imports
 from crypto_tools.constants import *
@@ -79,6 +78,139 @@ def derive_key(local_private_key=None, remote_public_key=None, info=b"", key_len
     derived_key = HKDF(algorithm=hashes.SHA256(), length=key_length, salt=None, info=info,).derive(shared_key)
 
     return derived_key
+
+
+###########################################################################
+#
+# Serialisation
+#
+###########################################################################
+#
+# serialise_private_key
+#
+def serialise_private_key(private_key=None):
+    '''
+    Serialise a Private Key (eg PEM format)
+
+    Parameters:
+        private_key: The private key to serialise
+
+    Return Value:
+        string: The private key in PEM format
+    '''
+    if not private_key: return ""
+
+    # Serialise the key
+    serial_key = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+
+    try:
+        # Try to decode the data (eg just a string)
+        return serial_key.decode()
+    except UnicodeDecodeError:
+        return serial_key
+
+
+#
+# serialise_public_key
+#
+def serialise_public_key(public_key=None):
+    '''
+    Serialise a Public Key (eg PEM format)
+
+    Parameters:
+        public_key: The public key to serialise
+
+    Return Value:
+        string: The public key in PEM format
+    '''
+    if not public_key: return ""
+
+    # Serialise the key
+    serial_key = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+    try:
+        # Try to decode the data (eg just a string)
+        return serial_key.decode()
+    except UnicodeDecodeError:
+        return serial_key
+
+
+#
+# deserialise_private_key
+#
+def deserialise_private_key(key_pem=None):
+    '''
+    Deserialise a Private Key (eg PEM format back into Ed25519PrivateKey class)
+
+    Parameters:
+        key_pem: The key in PEM format
+
+    Return Value:
+        object: The Ed25519 Private key
+    '''
+    if not key_pem: return None
+
+    # Check type of data
+    if not isinstance(key_pem, bytes):
+        # Assume everything else is a string...
+        key_pem = str(key_pem).encode(ENCODE_METHOD)
+
+    # Deserialise the key
+    priv_key = load_pem_private_key(key_pem, password=None)
+    return priv_key
+
+
+#
+# deserialise_public_key
+#
+def deserialise_public_key(key_pem=None):
+    '''
+    Deserialise a Public Key (eg PEM format back into Ed25519PublicKey class)
+
+    Parameters:
+        key_pem: The key in PEM format
+
+    Return Value:
+        object: The Ed25519 Public key
+    '''
+    if not key_pem: return None
+
+    # Check type of data
+    if not isinstance(key_pem, bytes):
+        # Assume everything else is a string...
+        key_pem = str(key_pem).encode(ENCODE_METHOD)
+
+    # Deserialise the key
+    pub_key = load_pem_public_key(key_pem)
+    return pub_key
+
+
+###########################################################################
+#
+# Format
+#
+###########################################################################
+#
+# format_fernet
+#
+def format_fernet(key=None):
+    '''
+    Format the key for use with Fernet
+
+    Parameters:
+        keyL The key to format
+
+    Return Value:
+        string: The private key in PEM format
+    '''
+    return base64.urlsafe_b64encode(key[:32])
 
 
 ###########################################################################
