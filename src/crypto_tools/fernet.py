@@ -12,7 +12,10 @@
 
 # System Imports
 from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
 import base64
+import secrets
 
 # Our Module Imports
 from crypto_tools.constants import *
@@ -60,6 +63,37 @@ def use_key(key=None):
     if not key: return None
 
     return Fernet(key)
+
+
+#
+# derive_key
+#
+def derive_key(salt=None, password=""):
+    '''
+    Derive a key from a password
+
+    Parameters:
+        salt: The salt use in the derivation of the password (or a new one will be generated)
+        password: The password for the password generation
+
+    Return Value:
+        bytes: The salt
+        bytes: The key
+    '''
+    if not salt:
+        # Generate a salt
+        salt = secrets.token_bytes(SALT_SIZE)
+
+    # Check type of the password
+    if not isinstance(password, bytes):
+        # Assume everything else is a string...
+        password = str(password).encode(ENCODE_METHOD)
+
+    # Derive the key from the password/salt
+    _kdf = Scrypt(salt=salt, length=SCRYPT_LENGTH, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
+    _key = base64.urlsafe_b64encode(_kdf.derive(password))
+
+    return ( salt, _key )
 
 
 ###########################################################################
