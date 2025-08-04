@@ -13,6 +13,7 @@
 # System Imports
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from typing import get_args
 
 import base64
 import secrets
@@ -48,6 +49,22 @@ def generate_key():
 
 
 #
+# generate_salt
+#
+def generate_salt():
+    '''
+    Generate asalt
+
+    Parameters:
+        None
+
+    Return Value:
+        bytes: A generated salt
+    '''
+    return secrets.token_bytes(SALT_SIZE)
+
+
+#
 # use_key
 #
 def use_key(key=None):
@@ -68,21 +85,35 @@ def use_key(key=None):
 #
 # derive_key
 #
-def derive_key(salt=None, password=""):
+def derive_key(salt=None, password="", security="high"):
     '''
     Derive a key from a password
 
     Parameters:
         salt: The salt use in the derivation of the password (or a new one will be generated)
         password: The password for the password generation
+        security: Determines the computation time of the key.  Must be one of
+            "low", "medium", or "high"
 
     Return Value:
         bytes: The salt
         bytes: The key
     '''
+    # Determine the computational cost for the key
+    security_options = get_args(SECURITY_LEVELS)
+    assert security in security_options, \
+            f"'{security}' is not in {security_options}"
+
+    if security == "low":
+        _computation_cost = SCRYPT_N_LOW
+    elif security == "medium":
+        _computation_cost = SCRYPT_N_MEDIUM
+    else:
+        _computation_cost = SCRYPT_N_HIGH
+
     if not salt:
         # Generate a salt
-        salt = secrets.token_bytes(SALT_SIZE)
+        salt = generate_salt()
 
     # Check type of the password
     if not isinstance(password, bytes):
@@ -90,7 +121,7 @@ def derive_key(salt=None, password=""):
         password = str(password).encode(ENCODE_METHOD)
 
     # Derive the key from the password/salt
-    _kdf = Scrypt(salt=salt, length=SCRYPT_LENGTH, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
+    _kdf = Scrypt(salt=salt, length=SCRYPT_LENGTH, n=_computation_cost, r=SCRYPT_R, p=SCRYPT_P)
     _key = base64.urlsafe_b64encode(_kdf.derive(password))
 
     return ( salt, _key )

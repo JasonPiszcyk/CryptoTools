@@ -1,25 +1,20 @@
 #!/usr/bin/env python3
 '''
-* crypto_tools.py
+* fernet.py
 *
 * Copyright (c) 2023 Iocane Pty Ltd
 *
 * @author: Jason Piszcyk
 * 
-* Implement basic encryption functionality
+* Base class for an encrypted file
 *
 '''
 
 # System Imports
-from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-
-import secrets
-import base64
-
+import os.path
 
 # Our Module Imports
-from crypto_tools.encrypted_file.base import EncryptedFileBase
+import crypto_tools.fernet
 from crypto_tools.constants import *
 
 #
@@ -32,11 +27,39 @@ from crypto_tools.constants import *
 # EncryptedFile - Fernet
 #
 ###########################################################################
-class EncryptedFile_Fernet(EncryptedFileBase):
-    ''' Encrypt file using Fernet '''
+class EncryptedFile_Fernet():
+    ''' Encrypted file using Fernet '''
+    #
+    # __init__
+    #
+    def __init__(self, filename="", key="", salt=b"", password="",
+                security="high", salt_in_file=True):
+        ''' Init method for class '''
+        self._security = security
+        self.filename = filename
+        self.salt_in_file = salt_in_file
+        self._header_size = 0
+
+        if key:
+            # If a key was provided, use that
+            self._key = key
+        
+        else:
+            # Write salt directly so it doesn;t generate a key
+            self._salt = salt
+
+            # Use the property to generate a key
+            self.password = password
+
+        # Set the key / salt
+        self.key = key
+
+
+    ###########################################################################
     #
     # Properties
     #
+    ###########################################################################
     @property
     def salt(self):
         return self._salt
@@ -45,7 +68,13 @@ class EncryptedFile_Fernet(EncryptedFileBase):
     def salt(self, value):
         # Generate a key using the salt
         self._salt = value
-        self._key = self._derive_key()   
+
+        # Generate a key using the stored password/salt
+        self._salt, self._key = crypto_tools.fernet.derive_key(
+            salt=self._salt,
+            password=self._password,
+            security=self._security
+        )
 
 
     @property
@@ -57,53 +86,70 @@ class EncryptedFile_Fernet(EncryptedFileBase):
     def password(self, value):
         # Generate a key using the password
         self._password = value
-        self._key = self._derive_key()   
+
+        # Generate a key using the stored password/salt
+        self._salt, self._key = crypto_tools.fernet.derive_key(
+            salt=self._salt,
+            password=self._password,
+            security=self._security
+        )
 
 
+    ###########################################################################
     #
-    # __init__
+    # Access methods for the file
     #
-    def __init__(self, *args, password="", salt=None, **kwargs):
-        ''' Init method for class '''
-        super().__init__(*args, **kwargs)
-
-        self._password = password
-        self._salt = salt
-        self._key = self._derive_key()
-
-
+    ###########################################################################
     #
     # read
     #
     def read(self):
         '''
-        Read an encrypted file
+        Read from the encrypted file
 
         Parameters:
             None
 
         Return Value:
-            The unencrypted contents of the file
+            The unencrypted contents
         '''
         if not self.filename:
             raise ValueError("'filename' attribute must be set")
-        
-        self._header_size = SALT_SIZE
-        self._read()
 
-        # Decrypt the data
-        return self.decrypt()
+        # Read in the contents
+        if not os.path.isfile(self.filename):
+            raise RuntimeWarning("'filename' not found")
+
+        if self.salt_in_file:
+            self._header_size = SALT_SIZE
+        else:
+            self._header_size = 0
+
+        with open(self.filename, "rb") as file:
+            _contents = file.read()
+        
+        if not (len(_contents) > self._header_size):
+            return None
+
+        if self._header_size > 0:
+            # Use the salt to generate a new key
+            self.salt = _contents[:self._header_size]
+            _enc_data = _contents[self._header_size:]
+        else:
+            _enc_data = _contents
+
+        return crypto_tools.fernet.decrypt(data=_enc_data, key=self._key)
 
 
     #
     # write
     #
-    def write(self, data=None):
+    def write(self, data=""):
         '''
         Write an encrypted file
 
         Parameters:
-            data: The unencrypted file contents to be written
+            data: The data to be encrypted and written
 
         Return Value:
             None
@@ -111,99 +157,21 @@ class EncryptedFile_Fernet(EncryptedFileBase):
         if not self.filename:
             raise ValueError("'filename' attribute must be set")
 
+        # Create a header if the salt is to be stored in the file
+        if self.salt_in_file:
+            self._header_size = SALT_SIZE
+            _header = self._salt
+        else:
+            self._header_size = 0
+            _header = b""
+    
         # Encrypt the data
-        self._header = self._salt
-        self._data = self.encrypt(data)
-        self._write()
+        _enc_data = crypto_tools.fernet.encrypt(data=data, key=self._key)
 
+        _contents = _header + _enc_data
 
-    #
-    # decrypt
-    #
-    def decrypt(self):
-        '''
-        Decrypt data using the key in the class
-
-        Parameters:
-            None
-
-        Return Value:
-            bytes: The unencrypted form of the data
-        '''
-        if not self._key:
-            raise RuntimeError("Encryption key empty")
-
-        # Check type of data
-        if not isinstance(self._data, bytes):
-            # Assume everything else is a string...
-            self._data = str(self._data).encode(ENCODE_METHOD)
-
-        # Decrypt the data
-        unencrypted_data = b""
-        fernet = Fernet(self._key)
-        try:
-            unencrypted_data = fernet.decrypt(self._data)
-        except InvalidToken:
-            raise RuntimeWarning("Invalid encryption key")
-
-        try:
-            # Try to decode the data (eg just a string)
-            return unencrypted_data.decode(ENCODE_METHOD)
-        except UnicodeDecodeError:
-            return unencrypted_data
-
-
-    #
-    # encrypt
-    #
-    def encrypt(self, data=None):
-        '''
-        Encrypt data using the supplied key
-
-        Parameters:
-            data: The data to be encryted
-
-        Return Value:
-            bytes: The encypted form of the data
-        '''
-        if not self._key:
-            raise ValueError("'key' argument must be supplied")
-
-        # Check type of data
-        if not isinstance(data, bytes):
-            # Assume everything else is a string...
-            data = str(data).encode(ENCODE_METHOD)
-
-        # Encrypt the data
-        fernet = Fernet(self._key)
-        return fernet.encrypt(data)
-
-
-    #
-    # _derive_key
-    #
-    def _derive_key(self):
-        '''
-        Generate an encryption key 
-
-        Parameters:
-            None
-
-        Return Value:
-            bytes: The key
-        '''
-        if not self._salt:
-            # Generate a salt
-            self._salt = secrets.token_bytes(SALT_SIZE)
-
-        # Check type of the password
-        if not isinstance(self._password, bytes):
-            # Assume everything else is a string...
-            self._password = str(self._password).encode(ENCODE_METHOD)
-
-        # Derive the key from the password/salt
-        kdf = Scrypt(salt=self._salt, length=SCRYPT_LENGTH, n=SCRYPT_N, r=SCRYPT_R, p=SCRYPT_P)
-        return base64.urlsafe_b64encode(kdf.derive(self._password))
+        with open(self.filename, "wb") as file:
+            file.write(_contents)
 
 
 ###########################################################################

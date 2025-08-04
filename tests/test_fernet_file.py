@@ -55,7 +55,7 @@ def test_file():
     assert str(encrypted_string) != str(simple_string)
 
     # Encrypt the file
-    file = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=password)
+    file = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=password, security="low")
     file.write(data=FILE_CONTENTS)
 
     # Read the file
@@ -69,12 +69,12 @@ def test_file():
     assert str(FILE_CONTENTS) == str(new_contents)
 
     # Wrong password
-    wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=wrong_password)
+    wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=wrong_password, security="low")
     with pytest.raises(RuntimeWarning):
         wrong_pwd.read()
 
     # Wrong file
-    wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/made_some_name_up.txt", password=password)
+    wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/made_some_name_up.txt", password=password, security="low")
     with pytest.raises(RuntimeWarning):
         wrong_pwd.read()
 

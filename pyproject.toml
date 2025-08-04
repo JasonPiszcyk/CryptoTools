@@ -22,3 +22,8 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/JasonPiszcyk/CryptoTools"
 "Bug Tracker" = "https://github.com/JasonPiszcyk/CryptoTools/issues"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
