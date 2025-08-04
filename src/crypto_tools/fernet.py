@@ -53,7 +53,7 @@ def generate_key():
 #
 def generate_salt():
     '''
-    Generate asalt
+    Generate a salt
 
     Parameters:
         None
