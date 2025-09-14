@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+'''
+PyTest - Testing Config
+
 Copyright (C) 2025 Jason Piszcyk
 Email: Jason.Piszcyk@gmail.com
 
@@ -14,3 +18,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program (See file: COPYING). If not, see
 <https://www.gnu.org/licenses/>.
+'''
+
+import pytest
+
+
+###########################################################################
+#
+# Config
+#
+###########################################################################
+def pytest_configure(config):
+    pass
+
+###########################################################################
+#
+# Fixtures
+#
+###########################################################################

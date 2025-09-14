@@ -1,21 +1,58 @@
 #!/usr/bin/env python3
 '''
-* fernet.py
-*
-* Copyright (c) 2023 Iocane Pty Ltd
-*
-* @author: Jason Piszcyk
-* 
-* Base class for an encrypted file
-*
-'''
+Encrypted File Class using Fernet encrpytion
 
-# System Imports
+Copyright (C) 2025 Jason Piszcyk
+Email: Jason.Piszcyk@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program (See file: COPYING). If not, see
+<https://www.gnu.org/licenses/>.
+'''
+##########################################################################
+#
+# Imports
+#
+###########################################################################
+# Shared variables, constants, etc
+
+# System Modules
 import os.path
 
-# Our Module Imports
+# Local app modules
 import crypto_tools.fernet
-from crypto_tools.constants import *
+from crypto_tools.constants import SALT_SIZE
+
+# Imports for python variable type hints
+
+
+###########################################################################
+#
+# Module Specific Items
+#
+###########################################################################
+#
+# Types
+#
+
+#
+# Constants
+#
+
+#
+# Global Variables
+#
+
 
 #
 # Globals
@@ -24,29 +61,66 @@ from crypto_tools.constants import *
 
 ###########################################################################
 #
-# EncryptedFile - Fernet
+# EncryptedFile_Fernet Class Definition
 #
 ###########################################################################
 class EncryptedFile_Fernet():
-    ''' Encrypted file using Fernet '''
+    '''
+    Encrypted file using Fernet
+
+    Attributes:
+        filename (str): Name of the file
+        key (bytes): The encryption key
+        salt (bytes): The salt
+    '''
     #
     # __init__
     #
-    def __init__(self, filename="", key="", salt=b"", password="",
-                security="high", salt_in_file=True):
-        ''' Init method for class '''
-        self._security = security
+    def __init__(
+            self,
+            filename: str = "",
+            key: bytes = b"",
+            salt: bytes = b"",
+            password: str = "",
+            security: str = "high",
+            salt_in_file: bool = True
+    ):
+        '''
+        Initialises the instance.
+
+        Args:
+            filename (str): Name of the file
+            key (bytes): The encryption key
+            salt (bytes): The salt
+            password (str): Password used to derive a key if one not provided
+            security (str): Determines the computation time of the key.  Must
+                be one of "low", "medium", or "high"
+            salt_in_file (bool): If tru store the salt in the file header
+
+        Returns:
+            None
+
+        Raises:
+            None
+        '''
+        # Private Attributes
+        self.__security = security
+        self.__header_size = 0
+        self.__key = b""
+        self.__salt = b""
+        self.__password = ""
+
+        # Attributes
         self.filename = filename
         self.salt_in_file = salt_in_file
-        self._header_size = 0
 
         if key:
             # If a key was provided, use that
-            self._key = key
+            self.__key = key
         
         else:
-            # Write salt directly so it doesn;t generate a key
-            self._salt = salt
+            # Write salt directly so it doesn't generate a key
+            self.__salt = salt
 
             # Use the property to generate a key
             self.password = password
@@ -62,36 +136,40 @@ class EncryptedFile_Fernet():
     ###########################################################################
     @property
     def salt(self):
-        return self._salt
+        ''' The salt '''
+        return self.__salt
     
     @salt.setter
     def salt(self, value):
+        ''' When the salt changes, derive a new key '''
         # Generate a key using the salt
-        self._salt = value
+        self.__salt = value
 
         # Generate a key using the stored password/salt
-        self._salt, self._key = crypto_tools.fernet.derive_key(
-            salt=self._salt,
-            password=self._password,
-            security=self._security
+        self.__salt, self.__key = crypto_tools.fernet.derive_key(
+            salt=self.__salt,
+            password=self.__password,
+            security=self.__security
         )
 
 
     @property
     def password(self):
+        ''' The password '''
         # Return nothing (it's a password!)
         return None
     
     @password.setter
     def password(self, value):
+        ''' When the password changes, derive a new key '''
         # Generate a key using the password
-        self._password = value
+        self.__password = value
 
         # Generate a key using the stored password/salt
-        self._salt, self._key = crypto_tools.fernet.derive_key(
-            salt=self._salt,
-            password=self._password,
-            security=self._security
+        self.__salt, self.__key = crypto_tools.fernet.derive_key(
+            salt=self.__salt,
+            password=self.__password,
+            security=self.__security
         )
 
 
@@ -103,70 +181,84 @@ class EncryptedFile_Fernet():
     #
     # read
     #
-    def read(self):
+    def read(self) -> bytes:
         '''
         Read from the encrypted file
 
-        Parameters:
+        Args:
             None
 
-        Return Value:
-            The unencrypted contents
+        Returns:
+            bytes: The unencrypted contents
+
+        Raises:
+            AssertionError
+                when filename not set
+            ValueError
+                when file cannot be found
         '''
-        if not self.filename:
-            raise ValueError("'filename' attribute must be set")
+        assert self.filename, "filename attribute must be set"
 
         # Read in the contents
         if not os.path.isfile(self.filename):
-            raise RuntimeWarning("'filename' not found")
+            raise ValueError("'filename' not found")
 
         if self.salt_in_file:
-            self._header_size = SALT_SIZE
+            self.__header_size = SALT_SIZE
         else:
-            self._header_size = 0
+            self.__header_size = 0
 
         with open(self.filename, "rb") as file:
             _contents = file.read()
         
-        if not (len(_contents) > self._header_size):
-            return None
+        if not (len(_contents) > self.__header_size):
+            return b""
 
-        if self._header_size > 0:
+        if self.__header_size > 0:
             # Use the salt to generate a new key
-            self.salt = _contents[:self._header_size]
-            _enc_data = _contents[self._header_size:]
+            self.salt = _contents[:self.__header_size]
+            _enc_data = _contents[self.__header_size:]
         else:
             _enc_data = _contents
 
-        return crypto_tools.fernet.decrypt(data=_enc_data, key=self._key)
+        return crypto_tools.fernet.decrypt(data=_enc_data, key=self.__key)
 
 
     #
     # write
     #
-    def write(self, data=""):
+    def write(
+            self,
+            data: bytes = b""
+    ):
         '''
         Write an encrypted file
 
-        Parameters:
-            data: The data to be encrypted and written
+        Args:
+            data (bytes): The data to be encrypted and written
 
-        Return Value:
+        Returns:
             None
+
+        Raises:
+            AssertionError
+                when filename not set
+            ValueError
+                when file cannot be found
         '''
-        if not self.filename:
-            raise ValueError("'filename' attribute must be set")
+        assert self.filename, "filename attribute must be set"
+        assert isinstance(data, bytes), "Data must be in byte format"
 
         # Create a header if the salt is to be stored in the file
         if self.salt_in_file:
-            self._header_size = SALT_SIZE
-            _header = self._salt
+            self.__header_size = SALT_SIZE
+            _header = self.__salt
         else:
-            self._header_size = 0
+            self.__header_size = 0
             _header = b""
     
         # Encrypt the data
-        _enc_data = crypto_tools.fernet.encrypt(data=data, key=self._key)
+        _enc_data = crypto_tools.fernet.encrypt(data=data, key=self.__key)
 
         _contents = _header + _enc_data
 

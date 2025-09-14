@@ -1,16 +1,32 @@
 #!/usr/bin/env python3
 '''
-* fernet.py
-*
-* Copyright (c) 2023 Iocane Pty Ltd
-*
-* @author: Jason Piszcyk
-* 
-* Basic Encryption Functionality - Fernet (Symmetric Encryption)
-*
-'''
+Fernet (Symmetric Encryption)
 
-# System Imports
+Copyright (C) 2025 Jason Piszcyk
+Email: Jason.Piszcyk@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program (See file: COPYING). If not, see
+<https://www.gnu.org/licenses/>.
+'''
+###########################################################################
+#
+# Imports
+#
+###########################################################################
+# Shared variables, constants, etc
+
+# System Modules
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from typing import get_args
@@ -18,13 +34,38 @@ from typing import get_args
 import base64
 import secrets
 
-# Our Module Imports
-from crypto_tools.constants import *
+# Local app modules
+from crypto_tools.constants import (
+    ENCODE_METHOD,
+    SALT_SIZE,
+    SECURITY_LEVELS,
+    SCRYPT_LENGTH,
+    SCRYPT_N_LOW,
+    SCRYPT_N_MEDIUM,
+    SCRYPT_N_HIGH,
+    SCRYPT_R,
+    SCRYPT_P,
+)
+
+# Imports for python variable type hints
+
+
+###########################################################################
+#
+# Module Specific Items
+#
+###########################################################################
+#
+# Types
+#
 
 #
-# Globals
+# Constants
 #
 
+#
+# Global Variables
+#
 
 
 ###########################################################################
@@ -35,70 +76,51 @@ from crypto_tools.constants import *
 #
 # generate_key
 #
-def generate_key():
+def generate_key() -> bytes:
     '''
     Generate an encryption key
 
-    Parameters:
+    Args:
         None
 
-    Return Value:
-        object: The Fernet object
+    Returns:
+        bytes - The generated key
+
+    Raises:
+        None
     '''
     return Fernet.generate_key()
 
 
 #
-# generate_salt
-#
-def generate_salt():
-    '''
-    Generate a salt
-
-    Parameters:
-        None
-
-    Return Value:
-        bytes: A generated salt
-    '''
-    return secrets.token_bytes(SALT_SIZE)
-
-
-#
-# use_key
-#
-def use_key(key=None):
-    '''
-    Use a key derived elsewhere
-
-    Parameters:
-        key: A URL-safe base64-encoded 32-byte key
-
-    Return Value:
-        object: The Fernet object
-    '''
-    if not key: return None
-
-    return Fernet(key)
-
-
-#
 # derive_key
 #
-def derive_key(salt=None, password="", security="high"):
+def derive_key(
+        salt: bytes = b"",
+        password: str = "",
+        security: str = "high"
+) -> tuple[bytes, bytes]:
     '''
     Derive a key from a password
 
-    Parameters:
-        salt: The salt use in the derivation of the password (or a new one will be generated)
-        password: The password for the password generation
+    Args:
+        salt (bytes): The salt used in the derivation of the password
+            (or a new one will be generated)
+        password (str): The password used to derive the key
         security: Determines the computation time of the key.  Must be one of
             "low", "medium", or "high"
 
-    Return Value:
+    Returns:
         bytes: The salt
         bytes: The key
+
+    Raises:
+        AssertionError
+            when key is not in byte format
     '''
+    assert isinstance(salt, bytes), "Salt must be in byte format"
+    assert isinstance(password, str), "Password must be in string format"
+
     # Determine the computational cost for the key
     security_options = get_args(SECURITY_LEVELS)
     assert security in security_options, \
@@ -115,16 +137,73 @@ def derive_key(salt=None, password="", security="high"):
         # Generate a salt
         salt = generate_salt()
 
-    # Check type of the password
-    if not isinstance(password, bytes):
-        # Assume everything else is a string...
-        password = str(password).encode(ENCODE_METHOD)
+    # Convert the password to a byte array
+    try:
+        _pw_bytes = password.encode(ENCODE_METHOD)
+    except UnicodeEncodeError:
+        # password is most likely invalid
+        return b"", b""
+ 
+    if not isinstance(_pw_bytes, bytes):
+        # password is invalid
+        return b"", b""
 
     # Derive the key from the password/salt
-    _kdf = Scrypt(salt=salt, length=SCRYPT_LENGTH, n=_computation_cost, r=SCRYPT_R, p=SCRYPT_P)
-    _key = base64.urlsafe_b64encode(_kdf.derive(password))
+    _kdf = Scrypt(
+        salt=salt,
+        length=SCRYPT_LENGTH,
+        n=_computation_cost,
+        r=SCRYPT_R,
+        p=SCRYPT_P
+    )
+    
+    _key = base64.urlsafe_b64encode(_kdf.derive(_pw_bytes))
 
     return ( salt, _key )
+
+
+#
+# generate_salt
+#
+def generate_salt() -> bytes:
+    '''
+    Generate a salt
+
+    Args:
+        None
+
+    Returns:
+        bytes - The generated salt
+
+    Raises:
+        None
+    '''
+    return secrets.token_bytes(SALT_SIZE)
+
+
+#
+# use_key
+#
+def use_key(
+        key: bytes = b""
+) -> Fernet | None:
+    '''
+    Use a key derived elsewhere
+
+    Args:
+        key: A URL-safe base64-encoded 32-byte key
+
+    Returns:
+        Fernet | None - A Fernet instance from the key
+
+    Raises:
+        AssertionError
+            when key is not in byte format
+    '''
+    assert isinstance(key, bytes), "Key must be in byte format"
+    if not key: return None
+
+    return Fernet(key)
 
 
 ###########################################################################
@@ -135,58 +214,70 @@ def derive_key(salt=None, password="", security="high"):
 #
 # encrypt
 #
-def encrypt(data=b"", key=None):
+def encrypt(
+        data: bytes = b"",
+        key: bytes = b""
+) -> bytes:
     '''
-    Encrypt data 
+    Encrypt data
 
-    Parameters:
-        data: The data to be encrypted
-        key: The encryption key
+    Args:
+        data (bytes): The data to be encrypted
+        key (bytes): The encryption key
 
-    Return Value:
-        bytes: The encrypted form of the data
+    Returns:
+        bytes: The encrypted data
+
+    Raises:
+        AssertionError
+            when key is not in byte format, or is empty
+            when data is not in byte format
     '''
-    if not key:
-        raise ValueError("Encryption key must be supplied")
-    
-    fernet = Fernet(key)
+    assert isinstance(key, bytes), "Key must be in byte format"
+    assert key, "Encryption key must be supplied"
+    assert isinstance(data, bytes), "data must be in byte format"
 
-    # Check type of data
-    if not isinstance(data, bytes):
-        # Assume everything else is a string...
-        data = str(data).encode(ENCODE_METHOD)
+    _fernet = Fernet(key)
 
-    return fernet.encrypt(data)
+    return _fernet.encrypt(data)
 
 
 #
 # decrypt
 #
-def decrypt(data=b"", key=None):
+def decrypt(
+        data: bytes = b"",
+        key: bytes = b""
+):
     '''
-    Decrypt data using the key in the class
+    Decrypt data
 
-    Parameters:
-        data: The data to be decrypted
-        key: The encryption key
+    Args:
+        data (bytes): The data to be decrypted
+        key (bytes): The encryption key
 
-    Return Value:
-        string(possibly bytes): The unencrypted form of the data
+    Returns:
+        bytes: The decrypted data (raise ValueError on failure)
+
+    Raises:
+        AssertionError
+            when key is not in byte format, or is empty
+            when data is not in byte format
+        ValueError
+            when decryption fails
     '''
-    if not key:
-        raise ValueError("Encryption key must be supplied")
-    
-    fernet = Fernet(key)
+    assert isinstance(key, bytes), "Key must be in byte format"
+    assert key, "Encryption key must be supplied"
+    assert isinstance(data, bytes), "data must be in byte format"
+
+    _fernet = Fernet(key)
     try:
-        unencrypted_data = fernet.decrypt(data)
+        _decrypted_data = _fernet.decrypt(data)
     except InvalidToken:
-        raise RuntimeWarning("Invalid encryption key")
+        raise ValueError("Invalid encryption key")
 
-    try:
-        # Try to decode the data (eg just a string)
-        return unencrypted_data.decode()
-    except UnicodeDecodeError:
-        return unencrypted_data
+    # Return the decrypted data
+    return _decrypted_data
 
 
 ###########################################################################

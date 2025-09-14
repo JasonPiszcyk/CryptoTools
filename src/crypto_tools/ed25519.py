@@ -1,28 +1,63 @@
 #!/usr/bin/env python3
 '''
-* ed25519.py
-*
-* Copyright (c) 2023 Iocane Pty Ltd
-*
-* @author: Jason Piszcyk
-* 
-* Basic Encryption Functionality - ED25519 (Eliptic Curve Signing)
-*
-'''
+ED25519 (Eliptic Curve Signing)
 
-# System Imports
+Copyright (C) 2025 Jason Piszcyk
+Email: Jason.Piszcyk@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program (See file: COPYING). If not, see
+<https://www.gnu.org/licenses/>.
+'''
+###########################################################################
+#
+# Imports
+#
+###########################################################################
+# Shared variables, constants, etc
+
+# System Modules
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    load_pem_public_key,
+)
 from cryptography.exceptions import InvalidSignature
 
+# Local app modules
+from crypto_tools.constants import ENCODE_METHOD
 
-# Our Module Imports
-from crypto_tools.constants import *
+# Imports for python variable type hints
+
+
+###########################################################################
+#
+# Module Specific Items
+#
+###########################################################################
+#
+# Types
+#
 
 #
-# Globals
+# Constants
 #
+
+#
+# Global Variables
+#
+
 
 ###########################################################################
 #
@@ -32,20 +67,21 @@ from crypto_tools.constants import *
 #
 # generate_keys
 #
-def generate_keys():
+def generate_keys() -> ed25519.Ed25519PrivateKey:
     '''
     Generate an ed25519 Key Pair
 
-    Parameters:
+    Args:
         None
 
-    Return Value:
-        object: The Ed25519 Private key
+    Returns:
+        ed25519.Ed25519PrivateKey - The generated key
+
+    Raises:
+        None
     '''
     # Generate the keys
-    private_key = ed25519.Ed25519PrivateKey.generate()
-
-    return private_key
+    return ed25519.Ed25519PrivateKey.generate()
 
 
 ###########################################################################
@@ -58,15 +94,21 @@ def generate_keys():
 #
 def encrypt():
     '''
-    Not Supported 
+    Encryption not Suppport by ED25519
 
-    Parameters:
+    Args:
         None
 
-    Return Value:
+    Returns:
         None
+
+    Raises:
+        NotImplementedError
+            Always
     '''
-    raise TypeError("Ed25519 cannot be used for encrpytion/decryption")
+    raise NotImplementedError(
+        "Ed25519 cannot be used for encryption/decryption"
+    )
 
 
 #
@@ -74,15 +116,21 @@ def encrypt():
 #
 def decrypt():
     '''
-    Not Supported 
+    Decryption not Suppport by ED25519
 
-    Parameters:
+    Args:
         None
 
-    Return Value:
+    Returns:
         None
+
+    Raises:
+        NotImplementedError
+            Always
     '''
-    raise TypeError("Ed25519 cannot be used for encrpytion/decryption")
+    raise NotImplementedError(
+        "Ed25519 cannot be used for encryption/decryption"
+    )
 
 
 ###########################################################################
@@ -93,23 +141,29 @@ def decrypt():
 #
 # sign
 #
-def sign(data=b"", private_key=None):
+def sign(
+        data: bytes = b"",
+        private_key: ed25519.Ed25519PrivateKey | None = None
+) -> bytes:
     '''
-    Sign a message using the specified private key
+    Sign data using the specified private key
 
-    Parameters:
-        data: The data to be signed (as a unicode string)
-        private_key: The private key to do the signing
+    Args:
+        data (bytes): The data to be signed
+        private_key (ed25519.Ed25519PrivateKey): The private key used to sign
+            the data
 
-    Return Value:
-        None (will raise exception if a problem occurs)
+    Returns:
+        bytes: The signature
+
+    Raises:
+        AssertionError:
+            When data is not in byte format
+            when a private key is not supplied
     '''
-    if not private_key: raise ValueError("Private key was not supplied")
-
-    # Check type of data
-    if not isinstance(data, bytes):
-        # Assume everything else is a string...
-        data = str(data).encode(ENCODE_METHOD)
+    assert isinstance(data, bytes), "Data must be in byte format"
+    assert isinstance(private_key, ed25519.Ed25519PrivateKey), \
+            "Private key must be of type Ed25519PrivateKey" 
 
     # Sign the data and return the signature
     return private_key.sign(data)
@@ -118,31 +172,40 @@ def sign(data=b"", private_key=None):
 #
 # verify
 #
-def verify(data=b"", signature=None, public_key=None):
+def verify(
+        data: bytes = b"",
+        signature: bytes = b"",
+        public_key: ed25519.Ed25519PublicKey | None = None
+) -> bool:
     '''
     Verify data using the specified signature and public key
 
-    Parameters:
-        data: The data to be verified (as a unicode string)
-        signature: The signature to be verified
-        public_key: The public key used to verify the message
+    Args:
+        data (bytes): The data to be verified
+        signature (bytes): The signature to be used to verify the data
+        public_key (ed25519.Ed25519PublicKey): The public key used to verify
+            the data
 
-    Return Value:
-        None (will raise exception if a problem occurs)
+    Returns:
+        bool: True if successful - False if signature or key invalid
+
+    Raises:
+        AssertionError:
+            When data is not in byte format
+            when a signature is not supplied
+            when a publc key is not supplied
     '''
-    if not signature: raise ValueError("Signature not supplied")
-    if not public_key: raise ValueError("Public key was not supplied")
-
-    # Check type of data
-    if not isinstance(data, bytes):
-        # Assume everything else is a string...
-        data = str(data).encode(ENCODE_METHOD)
+    assert isinstance(data, bytes), "Data must be in byte format"
+    assert isinstance(signature, bytes), "Signature must be in byte format"
+    assert isinstance(public_key, ed25519.Ed25519PublicKey), \
+            "Private key must be of type Ed25519PrivateKey" 
+    if not signature: raise AssertionError("Signature not supplied")
 
     # Verify the signature
     try:
         public_key.verify(signature, data)
     except InvalidSignature:
-        raise RuntimeWarning("Invalid Ed25519 Signature")
+        return False
 
     # Signature has been verified
     return True
@@ -156,108 +219,156 @@ def verify(data=b"", signature=None, public_key=None):
 #
 # serialise_private_key
 #
-def serialise_private_key(private_key=None):
+def serialise_private_key(
+        private_key: ed25519.Ed25519PrivateKey | None = None
+) -> str:
     '''
     Serialise a Private Key (eg PEM format)
 
-    Parameters:
-        private_key: The private key to serialise
+    Args:
+        private_key (ed25519.Ed25519PrivateKey): The private key to serialise
 
-    Return Value:
-        string: The private key in PEM format
+    Returns:
+        str: The serialised key (blank if failed)
+
+    Raises:
+        AssertionError:
+            when a private key is not supplied
     '''
-    if not private_key: return ""
+    assert isinstance(private_key, ed25519.Ed25519PrivateKey), \
+            "Private key must be of type Ed25519PrivateKey" 
 
     # Serialise the key
-    serial_key = private_key.private_bytes(
+    _serial_key = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
     )
 
     try:
-        # Try to decode the data (eg just a string)
-        return serial_key.decode()
+        # Try to decode the data
+        return _serial_key.decode(ENCODE_METHOD)
     except UnicodeDecodeError:
-        return serial_key
+        return ""
 
 
 #
 # serialise_public_key
 #
-def serialise_public_key(public_key=None):
+def serialise_public_key(
+        public_key: ed25519.Ed25519PublicKey | None = None
+) -> str:
     '''
     Serialise a Public Key (eg PEM format)
 
-    Parameters:
-        public_key: The public key to serialise
+    Args:
+        public_key (ed25519.Ed25519PrivateKey): The public key to serialise
 
-    Return Value:
-        string: The public key in PEM format
+    Returns:
+        str: The serialised key (blank if failed)
+
+    Raises:
+        AssertionError:
+            when a public key is not supplied
     '''
-    if not public_key: return ""
+    assert isinstance(public_key, ed25519.Ed25519PrivateKey), \
+            "Private key must be of type Ed25519PrivateKey" 
 
     # Serialise the key
-    serial_key = public_key.public_bytes(
+    _serial_key = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
     try:
         # Try to decode the data (eg just a string)
-        return serial_key.decode()
+        return _serial_key.decode(ENCODE_METHOD)
     except UnicodeDecodeError:
-        return serial_key
+        return ""
 
 
 #
 # deserialise_private_key
 #
-def deserialise_private_key(key_pem=None):
+def deserialise_private_key(
+        key_pem: str | bytes = b""
+) -> ed25519.Ed25519PrivateKey | None:
     '''
     Deserialise a Private Key (eg PEM format back into Ed25519PrivateKey class)
 
-    Parameters:
-        key_pem: The key in PEM format
+    Args:
+        key_pem (str | bytes): The private key to deserialise
 
-    Return Value:
-        object: The Ed25519 Private key
+    Returns:
+        ed25519.Ed25519PrivateKey | None: The private key (none if Failed)
+
+    Raises:
+        None
     '''
     if not key_pem: return None
 
-    # Check type of data
+    # Make sure the key_pem is in bytes
+    if isinstance(key_pem, str):
+        try:
+            key_pem = key_pem.encode(ENCODE_METHOD)
+        except UnicodeEncodeError:
+            # key_pem is most likely invalid
+            return None
+ 
     if not isinstance(key_pem, bytes):
-        # Assume everything else is a string...
-        key_pem = str(key_pem).encode(ENCODE_METHOD)
+        # key_pem is invalid
+        return None
 
     # Deserialise the key
-    priv_key = load_pem_private_key(key_pem, password=None)
-    return priv_key
+    _key = load_pem_private_key(key_pem, password=None)
+
+    # Make sure the key is the correct type
+    if not isinstance(_key, ed25519.Ed25519PrivateKey):
+        return None
+    
+    return _key
 
 
 #
 # deserialise_public_key
 #
-def deserialise_public_key(key_pem=None):
+def deserialise_public_key(
+        key_pem: str | bytes = b""
+) -> ed25519.Ed25519PublicKey | None:
     '''
     Deserialise a Public Key (eg PEM format back into Ed25519PublicKey class)
 
-    Parameters:
-        key_pem: The key in PEM format
+    Args:
+        key_pem (str): The public key to deserialise
 
-    Return Value:
-        object: The Ed25519 Public key
+    Returns:
+        ed25519.Ed25519PublicKey | None: The public key (none if Failed)
+
+    Raises:
+        None
     '''
     if not key_pem: return None
 
-    # Check type of data
+    # Make sure the key_pem is in bytes
+    if isinstance(key_pem, str):
+        try:
+            key_pem = key_pem.encode(ENCODE_METHOD)
+        except UnicodeEncodeError:
+            # key_pem is most likely invalid
+            return None
+ 
     if not isinstance(key_pem, bytes):
-        # Assume everything else is a string...
-        key_pem = str(key_pem).encode(ENCODE_METHOD)
+        # key_pem is invalid
+        return None
 
     # Deserialise the key
-    pub_key = load_pem_public_key(key_pem)
-    return pub_key
+    _key = load_pem_public_key(key_pem)
+
+    # Make sure the key is the correct type
+    if not isinstance(_key, ed25519.Ed25519PublicKey):
+        return None
+    
+    return _key
 
 
 ###########################################################################

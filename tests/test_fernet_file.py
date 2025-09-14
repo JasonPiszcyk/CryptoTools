@@ -15,14 +15,15 @@ import pytest
 import json
 
 # Our Module Imports
-import crypto_tools
+from crypto_tools import fernet
+from crypto_tools.encrypted_file.fernet import EncryptedFile_Fernet
 
 
 #
 # Globals
 #
 
-FILE_CONTENTS = '''
+FILE_CONTENTS = b'''
 This is a file
 It has some stuff in it
 
@@ -37,8 +38,8 @@ JP
 # Start the tests...
 #
 ###########################################################################
-key = crypto_tools.fernet.generate_key()
-wrong_key = crypto_tools.fernet.generate_key()
+key = fernet.generate_key()
+wrong_key = fernet.generate_key()
 password = "test_password_1234"
 wrong_password = "wrong_password"
 
@@ -46,37 +47,50 @@ wrong_password = "wrong_password"
 # Test encrypting/decrypting a file
 #
 def test_file():
-    assert key is not None
+    assert key
 
     # Encrypt a simple string
-    simple_string = "This is a string"
-    encrypted_string = crypto_tools.fernet.encrypt(data=simple_string, key=key)
-    assert encrypted_string is not None
-    assert str(encrypted_string) != str(simple_string)
+    _simple_bytes = b"This is a string"
+    _encrypted_bytes = fernet.encrypt(data=_simple_bytes, key=key)
+    assert _encrypted_bytes
+    assert _encrypted_bytes != _simple_bytes
 
     # Encrypt the file
-    file = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=password, security="low")
-    file.write(data=FILE_CONTENTS)
+    _file = EncryptedFile_Fernet(
+        filename="/tmp/jpp.enc",
+        password=password,
+        security="low"
+    )
+    _file.write(data=FILE_CONTENTS)
 
     # Read the file
     with open("/tmp/jpp.enc", "rb") as f:
-        new_contents = f.read()
+        _encrypted_contents = f.read()
 
-    assert str(FILE_CONTENTS) != str(new_contents)
+    assert FILE_CONTENTS != _encrypted_contents
 
     # Decrypt the file
-    new_contents = file.read()
-    assert str(FILE_CONTENTS) == str(new_contents)
+    _decrypted_contents = _file.read()
+    assert FILE_CONTENTS == _decrypted_contents
 
     # Wrong password
-    wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/jpp.enc", password=wrong_password, security="low")
-    with pytest.raises(RuntimeWarning):
-        wrong_pwd.read()
+    _wrong_pw_f = EncryptedFile_Fernet(
+        filename="/tmp/jpp.enc",
+        password=wrong_password,
+        security="low"
+    )
+    with pytest.raises(ValueError):
+        _wrong_pw_f.read()
 
     # Wrong file
-    wrong_pwd = crypto_tools.EncryptedFile(filename="/tmp/made_some_name_up.txt", password=password, security="low")
-    with pytest.raises(RuntimeWarning):
-        wrong_pwd.read()
+    _wrong_pw_f = EncryptedFile_Fernet(
+        filename="/tmp/made_some_name_up.txt",
+        password=password,
+        security="low"
+    )
+
+    with pytest.raises(ValueError):
+        _wrong_pw_f.read()
 
 
 
