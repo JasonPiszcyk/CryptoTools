@@ -271,8 +271,8 @@ def serialise_public_key(
         AssertionError:
             when a public key is not supplied
     '''
-    assert isinstance(public_key, ed25519.Ed25519PrivateKey), \
-            "Private key must be of type Ed25519PrivateKey" 
+    assert isinstance(public_key, ed25519.Ed25519PublicKey), \
+            "Private key must be of type Ed25519PublicKey" 
 
     # Serialise the key
     _serial_key = public_key.public_bytes(
